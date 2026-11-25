@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kinova Dashboard</title>
+  <link rel="stylesheet" href="/style.css">
+  <script type="importmap">{"imports": {"three": "/vendor/three/three.module.js"}}</script>
+</head>
+<body>
+<header>
+  <h1>Kinova Gen3</h1>
+  <span id="armzustand" class="chip">–</span>
+  <span id="bewegt" class="chip">steht</span>
+  <button id="stopp" class="stopp">STOPP</button>
+  <button data-post="/api/fehler_quittieren">Fehler quittieren</button>
+</header>
+<main>
+  <section class="links">
+    <div id="twin"><div class="legende"><b class="x">x</b> <b class="y">y</b> <b class="z">z</b> · Basis groß, Gelenke klein, TCP gemessen dick</div></div>
+    <div class="streams">
+      <figure><img id="bild_farbe" alt=""><figcaption>Farbe <button data-stream="farbe">an</button></figcaption></figure>
+      <figure><img id="bild_tiefe" alt=""><figcaption>Tiefe (rot nah, blau fern) <button data-stream="tiefe">an</button></figcaption></figure>
+    </div>
+  </section>
+  <section class="rechts">
+    <div class="karte">
+      <h2>TCP-Pose (gemessen)</h2>
+      <table class="werte"><tr><th>x</th><th>y</th><th>z</th><th>θx</th><th>θy</th><th>θz</th></tr>
+        <tr id="pose"><td>–</td><td>–</td><td>–</td><td>–</td><td>–</td><td>–</td></tr>
+        <tr class="einheit"><td>mm</td><td>mm</td><td>mm</td><td>°</td><td>°</td><td>°</td></tr></table>
+      <h2>Gelenke (°)</h2>
+      <table class="werte"><tr><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th></tr>
+        <tr id="gelenke"><td>–</td><td>–</td><td>–</td><td>–</td><td>–</td><td>–</td><td>–</td></tr></table>
+      <p class="klein" id="fk">–</p>
+    </div>
+    <div class="karte">
+      <h2>Schrittweise bewegen</h2>
+      <div class="zeile">
+        <label><input type="radio" name="bezug" value="basis" checked> Basis</label>
+        <label><input type="radio" name="bezug" value="werkzeug"> TCP</label>
+        <label>Weg <input id="weg" type="number" min="1" max="50" value="10"> mm</label>
+        <label>Winkel <input id="winkel" type="number" min="1" max="15" value="5"> °</label>
+      </div>
+      <div class="tasten">
+        <button data-achse="dx" data-v="-1">x −</button><button data-achse="dx" data-v="1">x +</button>
+        <button data-achse="dy" data-v="-1">y −</button><button data-achse="dy" data-v="1">y +</button>
+        <button data-achse="dz" data-v="-1">z −</button><button data-achse="dz" data-v="1">z +</button>
+        <button data-achse="drx" data-v="-1">θx −</button><button data-achse="drx" data-v="1">θx +</button>
+        <button data-achse="dry" data-v="-1">θy −</button><button data-achse="dry" data-v="1">θy +</button>
+        <button data-achse="drz" data-v="-1">θz −</button><button data-achse="drz" data-v="1">θz +</button>
+      </div>
+      <div class="zeile">
+        <span>Gelenk</span>
+        <select id="gelenk_nr"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option></select>
+        <button data-gelenk="-1">− Winkel</button><button data-gelenk="1">+ Winkel</button>
+        <span class="klein" id="anschlag">–</span>
+      </div>
+      <div class="zeile">
+        <button id="home_speichern">Aktuelle Pose als Home speichern</button>
+        <button data-post="/api/home/fahren">Home anfahren</button>
+      </div>
+      <div class="zeile">
+        <button id="park_speichern">Aktuelle Pose als Park speichern</button>
+        <button id="park_fahren">Park anfahren</button>
+      </div>
+      <p class="klein" id="home">–</p>
+    </div>
+    <div class="karte">
+      <h2>Greifer</h2>
+      <div class="zeile">
+        <button id="greifer_auf">Öffnen</button><button id="greifer_zu">Schließen</button>
+        <span>Weite <b id="weite_ist">–</b> mm</span>
+      </div>
+      <label class="regler">Geschwindigkeit <input id="greifer_tempo" type="range" min="10" max="100" value="100"> <b id="tempo_wert">100</b> %</label>
+      <label class="regler">Griffweite <input id="greifer_weite" type="range" min="0" max="85" value="85"> <b id="weite_wert">85</b> mm
+        <button id="weite_anfahren">anfahren</button></label>
+    </div>
+    <div class="karte">
+      <h2>AprilTag-Test (36h11, 39,5 mm)</h2>
+      <div class="zeile">
+        <button data-post="/api/apriltag/erkennen">Tag erkennen</button>
+        <button data-tag="0.10">Fingerspitzen 10 cm darüber</button>
+        <button data-tag="0.03">Fingerspitzen 3 cm darüber</button>
+        <label><input id="tag_normale" type="checkbox"> an Tag-Normale ausrichten (sonst senkrecht)</label>
+      </div>
+      <p class="klein" id="tag">–</p>
+    </div>
+    <div class="karte">
+      <h2>Würfel</h2>
+      <div class="zeile">
+        <button data-post="/api/wuerfel/suchen">Suchen &amp; vermessen</button>
+        <button data-post="/api/wuerfel/scannen">Hier vermessen</button>
+      </div>
+      <div class="zeile">
+        <label><input id="dabei" type="checkbox"> Arbeitsbereich geprüft</label>
+        <button class="bestaetigen" data-skill="/api/wuerfel/greifen" data-frage="Würfel jetzt greifen? Öffnen, Vorgriff, Absenken, Schließen, 5 cm anheben." disabled>Greifen</button>
+        <button class="bestaetigen" data-skill="/api/wuerfel/abstellen" data-frage="Würfel an der Griffstelle abstellen, loslassen, hochfahren und Home?" disabled>Abstellen</button>
+        <button class="bestaetigen" data-skill="/api/wuerfel/ablauf" data-frage="Würfel-Skill starten: suchen, hinfahren, vermessen, greifen, 5 cm anheben, absetzen, öffnen, 10 cm linear hoch, Home?" disabled>Würfel-Skill (alles automatisch)</button>
+        <button class="bestaetigen" data-skill="/api/wuerfel/stapeln" data-frage="Alle Würfel im Arbeitsbereich stapeln? Der Arm sieht sich aus drei hohen Stellungen um, baut Türme aus höchstens drei Würfeln (dort, wo schon die meisten stehen) und fährt zum Schluss nach Home. Etwa 1–2 min je Würfel. Arbeitsbereich frei?" disabled>Würfel stapeln (alle)</button>
+      </div>
+      <div class="zeile">
+        <label>Schnell: Stufe <select id="schnell_stufe">
+          <option value="1">1 (0,10 m/s)</option><option value="2">2 (0,20 m/s)</option>
+          <option value="3">3 (0,30 m/s)</option><option value="4">4 (0,40 m/s)</option>
+          <option value="max">max (0,50 m/s)</option></select></label>
+        <label><input id="schnell_bahn" type="checkbox"> Gelenkbahn</label>
+        <label><input id="schnell_direkt" type="checkbox"> ohne Einzelscan</label>
+        <button class="bestaetigen" id="schnell_stapeln" disabled>Schnell stapeln</button>
+      </div>
+      <p class="klein" id="ablauf">–</p>
+      <p class="klein" id="wuerfel">–</p>
+    </div>
+    <div class="karte">
+      <h2>Farbkamera kalibrieren (ChArUco 6 × 8)</h2>
+      <div class="zeile">
+        <label>Quadrat <input id="quadrat_mm" type="number" step="0.05" min="25" max="35" value="30.00"> mm</label>
+        <button id="kal_start">Kalibrieren (33 Stellungen, ≈ 3 min)</button>
+        <button id="kal_rechnen">neu auswerten</button>
+        <button id="kal_uebernehmen">übernehmen</button>
+        <button id="kal_werk">Werkswerte</button>
+      </div>
+      <p class="klein" id="kalibrierung">–</p>
+    </div>
+    <div class="karte">
+      <h2>Netzzugang für Teams</h2>
+      <div id="netz_betreuer" hidden>
+        <div class="zeile"><button id="netz_freigabe">Fahren für Teams freigeben</button>
+          <button id="netz_entziehen">Fahrrecht entziehen (hält an)</button></div>
+        <p class="klein" id="netz_info">–</p>
+      </div>
+      <div id="netz_team" hidden>
+        <div class="zeile"><label>Schlüssel <input id="netz_schluessel" size="10" autocomplete="off"></label>
+          <label>Team <input id="netz_teamname" size="12"></label>
+          <button id="netz_anmelden">Fahrrecht holen</button><button id="netz_abmelden">abgeben</button></div>
+        <p class="klein" id="netz_team_info">–</p>
+      </div>
+      <div id="sim_teil" class="zeile" hidden><button id="sim_szene">Würfel neu hinlegen</button>
+        <button id="sim_zufall">zufällig</button> <span class="klein" id="sim_meldung"></span></div>
+    </div>
+    <div class="karte"><h2>Meldungen</h2><pre id="log"></pre></div>
+  </section>
+</main>
+<script type="module" src="/app.js"></script>
+</body>
+</html>

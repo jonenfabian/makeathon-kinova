@@ -1,0 +1,4 @@
+# Bibliothek kinova_team: nur Python-Standardbibliothek (ab Python 3.9; Simulation mit 3.9.6 geprüft, 11.11.2026).
+# Bilder und Simulation:
+numpy>=1.24                    # BSD-3-Clause
+opencv-python-headless>=4.8    # Apache-2.0 (Wheel enthält FFmpeg unter LGPL-2.1)

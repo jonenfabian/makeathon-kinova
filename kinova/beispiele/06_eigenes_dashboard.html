@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <title>Unser Kinova-Dashboard</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 16px; max-width: 760px; }
+    input { width: 9em; } button { margin: 2px; padding: 6px 10px; } .stopp { background: #c62828; color: #fff; }
+    pre { background: #f3f3f3; padding: 8px; min-height: 4em; white-space: pre-wrap; } img { max-width: 100%; }
+  </style>
+</head>
+<body>
+<!-- Beispiel für ein eigenes Dashboard im Browser: Datei im Browser öffnen, Adresse und Schlüssel eintragen.
+     Der Server erlaubt Anfragen von anderen Seiten (CORS), wenn der Team-Schlüssel mitgeschickt wird. -->
+<h1>Unser Kinova-Dashboard</h1>
+<p>Server <input id="adresse" value="127.0.0.1:8080"> Schlüssel <input id="schluessel" value="sim">
+  Team <input id="team" value="Team Blau"> <button id="anmelden">Fahrrecht holen</button></p>
+<p><button class="stopp" id="stopp">STOPP</button> <button data-pfad="/api/home/fahren">Home</button>
+  <button data-pfad="/api/greifer" data-daten='{"position": 0}'>Greifer auf</button>
+  <button data-pfad="/api/greifer" data-daten='{"position": 1}'>Greifer zu</button>
+  <button data-pfad="/api/schritt" data-daten='{"dz": 0.02}'>2 cm hoch</button>
+  <button data-pfad="/api/schritt" data-daten='{"dz": -0.02}'>2 cm runter</button>
+  <button data-pfad="/api/apriltag/erkennen" data-daten='{}'>Tags erkennen</button></p>
+<pre id="zustand">–</pre>
+<pre id="meldung">–</pre>
+<img id="video" alt="Farbkamera (Stream in der lokalen Oberfläche am Mac Mini einschalten)">
+<script>
+  const $ = (id) => document.getElementById(id);
+  let fahrrecht = null;
+  const url = (pfad) => `http://${$('adresse').value}${pfad}`;
+  const kopf = () => ({ 'Content-Type': 'application/json', 'X-Kinova-Schluessel': $('schluessel').value,
+    ...(fahrrecht ? { 'X-Kinova-Fahrrecht': fahrrecht } : {}) });
+  async function senden(pfad, daten = {}) {
+    const a = await fetch(url(pfad), { method: 'POST', headers: kopf(), body: JSON.stringify(daten) });
+    const d = await a.json();
+    $('meldung').textContent = a.ok ? JSON.stringify(d).slice(0, 400) : `Fehler: ${d.fehler}`;
+    return d;
+  }
+  $('anmelden').onclick = async () => { fahrrecht = (await senden('/api/fahrrecht/anmelden', { team: $('team').value })).fahrrecht; };
+  $('stopp').onclick = () => senden('/api/stopp');
+  document.querySelectorAll('[data-pfad]').forEach((k) => {
+    k.onclick = () => senden(k.dataset.pfad, JSON.parse(k.dataset.daten || '{}'));
+  });
+  setInterval(async () => {
+    try {
+      const z = await (await fetch(url('/api/zustand'), { headers: kopf() })).json();
+      if (!z.pose) { $('zustand').textContent = z.fehler || '–'; return; }
+      const p = z.pose;
+      $('zustand').textContent = `x ${(p.x * 1000).toFixed(1)}  y ${(p.y * 1000).toFixed(1)}  z ${(p.z * 1000).toFixed(1)} mm\n`
+        + `Greifer ${z.greifer_weite_mm} mm · ${z.armzustand} · ${z.bewegt ? 'bewegt sich' : 'steht'}\n`
+        + `Fahrrecht: ${z.netz.fahrer ? z.netz.fahrer.team : 'frei'} · freigegeben: ${z.netz.freigabe}`;
+      const quelle = url(`/video/farbe.mjpg?schluessel=${encodeURIComponent($('schluessel').value)}`);
+      if (z.streams.farbe && $('video').dataset.quelle !== quelle) { $('video').src = quelle; $('video').dataset.quelle = quelle; }
+    } catch (e) { $('zustand').textContent = `Server nicht erreichbar: ${e}`; }
+  }, 500);
+</script>
+</body>
+</html>

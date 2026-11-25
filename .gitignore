@@ -1,0 +1,8 @@
+.venv/
+__pycache__/
+*.pyc
+verbindung.json
+kinova/verbindung.json
+kinova/messungen/
+kinova/simulation/config/*_sim.json
+kinova/simulation/config/netz.json

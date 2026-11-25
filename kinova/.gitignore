@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+.venv/
+# enthält den Team-Schlüssel des echten Arbeitsplatzes
+verbindung.json
+# Zustand und Aufnahmen der Simulation
+messungen/
+simulation/config/*_sim.json
+simulation/config/netz.json
