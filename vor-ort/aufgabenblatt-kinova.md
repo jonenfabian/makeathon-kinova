@@ -62,7 +62,8 @@ Programm fehlende Würfel sowie bekannte belegte Zielfelder nachvollziehbar beha
 
 ## K4 Eine Erweiterung wählen
 
-Wählt nach K1–K3 eine Erweiterung und vereinbart ein überprüfbares Ergebnis:
+Wählt nach K1–K3 eine Erweiterung und vereinbart ein überprüfbares Ergebnis. Weitere Ideen, etwa Muster
+legen, einen Turm bauen oder ein Spiel gegen einen Menschen, stehen in der [Ideenliste](ideen.md).
 
 | Erweiterung | Euer Ergebnis |
 | --- | --- |
