@@ -78,9 +78,9 @@ nächsten Messung erst ab. Obere Tags können beim Stapeln verschwinden. `r.sim_
 setzt ausschließlich Simulationsszenen zurück und darf nicht Bestandteil des realen Ablaufs sein.
 Das fertige `r.stapeln()` ersetzt eure eigene Ablaufsteuerung bei der Turmaufgabe nicht.
 
-Das Eingießen von alkoholfreiem Bier ist eine gesonderte Bonusaufgabe. Sie braucht einen
-vorbereiteten, real geprüften Flaschengriff und Kippablauf. Die
-Würfelsimulation prüft weder Flaschen noch Flüssigkeiten.
+Bonus-Idee: alkoholfreies Bier eingießen. Wie der Arm die Flasche greift und kippt, denkt ihr euch
+selbst aus. Dafür gibt es keinen fertigen Befehl, und die Würfelsimulation prüft weder Flaschen noch
+Flüssigkeiten. Probiert den Ablauf zuerst langsam mit einer leeren Flasche.
 
 ## Ergebnisse und Abgabe
 
